@@ -6,7 +6,7 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
 	[Tooltip("Number of meter by second")]
-	public float speed;
+	public float _speed;
 
 	Vector2 velocity = new Vector2();
 	MovementController movementController;
@@ -40,7 +40,7 @@ public class Player : MonoBehaviour
 			vertical -= 1;
 		}
 
-		velocity = new Vector2(horizontal * speed, vertical * speed);
+		velocity = new Vector2(horizontal * _speed, vertical * _speed);
 		movementController.Move(velocity * Time.deltaTime);
 	}
 }
