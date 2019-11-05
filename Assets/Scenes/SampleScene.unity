@@ -970,7 +970,7 @@ GameObject:
   - component: {fileID: 692753945}
   - component: {fileID: 692753944}
   - component: {fileID: 692753946}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Terrain (16x16)_41
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1035,7 +1035,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 692753943}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.694695, y: 2.3944836, z: 9.830078}
+  m_LocalPosition: {x: -0.1, y: 4.25, z: 9.830078}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1110920746}
@@ -1054,7 +1054,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 0.35}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -1065,8 +1065,35 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1, y: 0.25}
   m_EdgeRadius: 0
+--- !u!1 &708752548 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9061387483792185485, guid: a481400454bd618409faec2a0c4e438f,
+    type: 3}
+  m_PrefabInstance: {fileID: 9061387483175206429}
+  m_PrefabAsset: {fileID: 0}
+--- !u!50 &708752554
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708752548}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_Interpolate: 1
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &832954713
 GameObject:
   m_ObjectHideFlags: 0
@@ -2645,7 +2672,7 @@ GameObject:
   - component: {fileID: 1805421935}
   - component: {fileID: 1805421934}
   - component: {fileID: 1805421936}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Terrain (16x16)_39
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2710,7 +2737,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1805421933}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5.694695, y: 2.3944836, z: 9.830078}
+  m_LocalPosition: {x: -2.1000001, y: 4.25, z: 9.830078}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1110920746}
@@ -2729,7 +2756,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 0.35}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -2740,7 +2767,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1, y: 0.25}
   m_EdgeRadius: 0
 --- !u!1 &1838204742
 GameObject:
@@ -2753,7 +2780,7 @@ GameObject:
   - component: {fileID: 1838204744}
   - component: {fileID: 1838204743}
   - component: {fileID: 1838204745}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: Terrain (16x16)_40
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2818,7 +2845,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1838204742}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.694695, y: 2.3944836, z: 9.830078}
+  m_LocalPosition: {x: -1.1000001, y: 4.25, z: 9.830078}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1110920746}
@@ -2837,7 +2864,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 0.35}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -2848,7 +2875,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1, y: 0.25}
   m_EdgeRadius: 0
 --- !u!1 &2001950682
 GameObject:
@@ -3107,7 +3134,7 @@ PrefabInstance:
     - target: {fileID: 67433474167946215, guid: a481400454bd618409faec2a0c4e438f,
         type: 3}
       propertyPath: _layerObstacle.m_Bits
-      value: 512
+      value: 1536
       objectReference: {fileID: 0}
     - target: {fileID: 3627327734871821154, guid: a481400454bd618409faec2a0c4e438f,
         type: 3}
@@ -3142,12 +3169,17 @@ PrefabInstance:
     - target: {fileID: 3627327734871821154, guid: a481400454bd618409faec2a0c4e438f,
         type: 3}
       propertyPath: _maxSpeed
-      value: 10
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 3627327734871821154, guid: a481400454bd618409faec2a0c4e438f,
         type: 3}
       propertyPath: _acceleration
       value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 3627327734871821154, guid: a481400454bd618409faec2a0c4e438f,
+        type: 3}
+      propertyPath: _timeToMaxJump
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a481400454bd618409faec2a0c4e438f, type: 3}

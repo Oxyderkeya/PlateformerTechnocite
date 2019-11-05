@@ -74,6 +74,7 @@ public class MovementController : MonoBehaviour
 
 			if (hit)
 			{
+				//détecter si j'ai touché un oneWayPlateform ou faire un autre Raycast après avoir fait un layer oneWayPlateform
 				velocity.x = (hit.distance - _skinWidth)* direction;
 				distance = hit.distance - _skinWidth;
 				if (direction < 0)

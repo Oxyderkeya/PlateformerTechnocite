@@ -13,7 +13,7 @@ public class Player : MonoBehaviour
 	[Tooltip("Unity value of max jump height")]
 	public float _jumpHeight;
 	[Tooltip("Time in seconds ro reach the jump height")]
-	public float timeToMaxJump;
+	public float _timeToMaxJump;
 	[Tooltip("0: cannot move in air, 1: same as in the ground")]
 	public float _airControl;
 	float _maxFallingSpeed;
@@ -34,8 +34,8 @@ public class Player : MonoBehaviour
 		movementController = GetComponent<MovementController>();
 
 		//Math calculation for gravity and jumpForce
-		_gravity = -(2 * _jumpHeight) / Mathf.Pow(timeToMaxJump, 2);
-		_jumpForce = Mathf.Abs(_gravity) * timeToMaxJump;
+		_gravity = -(2 * _jumpHeight) / Mathf.Pow(_timeToMaxJump, 2);
+		_jumpForce = Mathf.Abs(_gravity) * _timeToMaxJump;
 		_maxFallingSpeed = -_jumpForce;
 	}
 
@@ -66,10 +66,16 @@ public class Player : MonoBehaviour
 			controlModifier = _airControl;
 
 		velocity.x += _horizontal * _acceleration * controlModifier * Time.deltaTime;
-		if (velocity.x > _maxSpeed)
-			velocity.x = _maxSpeed;
-		if (velocity.x > _maxSpeed)
-			velocity.x = -_maxSpeed;
+
+		//Pareil que en dessous en plus court
+		if(Mathf.Abs(velocity.x) > _maxSpeed)
+		{
+			velocity.x = _maxSpeed * _horizontal;
+		}
+		//if (velocity.x > _maxSpeed)
+		//	velocity.x = _maxSpeed;
+		//if (velocity.x < -_maxSpeed)
+		//	velocity.x = -_maxSpeed;
 
 		if (_horizontal == 0)
 		{
