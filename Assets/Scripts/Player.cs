@@ -38,6 +38,7 @@ public class Player : MonoBehaviour
 	bool doubleJumping;
 
 	Animator anim;
+	AnimationTimes animationTimes;
 	SpriteRenderer spriteRenderer;
 
 	Vector2 velocity = new Vector2();
@@ -60,6 +61,7 @@ public class Player : MonoBehaviour
 		movementController = GetComponent<MovementController>();
 		anim = GetComponent<Animator>();
 		spriteRenderer = GetComponent<SpriteRenderer>();
+		animationTimes = GetComponent<AnimationTimes>();
 
 		// Math calculation for gravity and jumpForce
 		gravity = -(2 * jumpHeight) / Mathf.Pow(timeToMaxJump, 2);
@@ -281,6 +283,9 @@ public class Player : MonoBehaviour
 	{
 		anim.SetTrigger("hit");
 		freeze = true;
+
+		yield return new WaitForSeconds(animationTimes.GetTime("FrogHit"));
+
 		while(!anim.GetCurrentAnimatorStateInfo(0).IsName("FrogHit"))
 		{
 			yield return null;
