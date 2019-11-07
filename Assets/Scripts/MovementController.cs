@@ -5,131 +5,168 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider2D))]
 public class MovementController : MonoBehaviour
 {
-	public int _horizontalRayCount;
-	public int _verticalRayCount;
-	public LayerMask _layerObstacle;
-	public Collisions _collisions;
+	public int horizontalRayCount;
+	public int verticalRayCount;
+	public LayerMask layerObstacle;
+	public Collisions collisions;
 
-	BoxCollider2D _boxCollider;
-	Vector2 _bottomLeft, _bottomRight, _topLeft, _topRight;
+	float skinWidth;
+	float pitDistance;
 
-	float _verticalRaySpacing, _horizontalRaySpacing;
+	BoxCollider2D boxCollider;
+	Vector2 bottomLeft, bottomRight, topLeft, topRight;
 
-	float _skinWidth = 1 / 16f; //Attention à bien mettre le f pour float sinon la division revoie un entier et ça part en couille
+	float verticalRaySpacing;
+	float horizontalRaySpacing;
 
 	public struct Collisions
 	{
 		public bool top, bottom, left, right;
+		public bool frontPit; //est-ce que j'ai un ravin en face de moi ?
 
 		public void Reset()
 		{
 			top = bottom = left = right = false;
+			frontPit = false;
 		}
 	}
+
 	// Start is called before the first frame update
 	void Start()
-    {
-		_boxCollider = GetComponent<BoxCollider2D>();
-
-		CalculateSpacing();
+	{
+		boxCollider = GetComponent<BoxCollider2D>();
+		skinWidth = 1 / 16f;
+		pitDistance = 0.5f;
+		CalculateRaySpacings();
 	}
 
 	// Update is called once per frame
 	void Update()
-    {
-
+	{
 	}
 
 	public void Move(Vector2 velocity)
 	{
-		_collisions.Reset();
+		collisions.Reset();
 
 		CalculateBounds();
-		if(velocity.x != 0)
+		if (velocity.x != 0)
 			HorizontalMove(ref velocity);
 		if (velocity.y != 0)
 			VerticalMove(ref velocity);
+
+		DetctFrontPit(velocity);
+
 		transform.Translate(velocity);
 	}
 
 	void HorizontalMove(ref Vector2 velocity)
 	{
-		// XXX brique sort du mur, reassign valeur de distance dans le boucle
-
 		float direction = Mathf.Sign(velocity.x);
-		float distance = Mathf.Abs(velocity.x) + _skinWidth;
-		Vector2 baseOrigin = direction == 1 ? _bottomRight : _bottomLeft;
+		float distance = Mathf.Abs(velocity.x) + skinWidth;
 
-		for (int i = 0; i < _verticalRayCount; i++)
+		Vector2 baseOrigin = direction == 1 ? bottomRight : bottomLeft;
+
+		for (int i = 0; i < verticalRayCount; i++)
 		{
-			Vector2 origin = baseOrigin + new Vector2(0, _verticalRaySpacing * i);
+			Vector2 origin = baseOrigin + new Vector2(0, verticalRaySpacing * i);
 
-			Debug.DrawLine(origin, origin + new Vector2(direction * distance, 0));
+			//Debug.DrawLine(origin, origin + new Vector2(direction * distance, 0));
 			RaycastHit2D hit = Physics2D.Raycast(
 				origin,
 				new Vector2(direction, 0),
 				distance,
-				_layerObstacle
+				layerObstacle
 				);
 
 			if (hit)
 			{
-				//détecter si j'ai touché un oneWayPlateform ou faire un autre Raycast après avoir fait un layer oneWayPlateform
-				velocity.x = (hit.distance - _skinWidth)* direction;
-				distance = hit.distance - _skinWidth;
-				if (direction < 0)
-					_collisions.left = true;
-				else if (direction > 0)
-					_collisions.right = true;
+				if (!(hit.transform.gameObject.tag == "oneWayPlatform"))
+				{
+					velocity.x = (hit.distance - skinWidth) * direction;
+					distance = hit.distance - skinWidth;
+
+					if (direction < 0)
+						collisions.left = true;
+					else if (direction > 0)
+						collisions.right = true;
+				}
 			}
 		}
 	}
+
 	void VerticalMove(ref Vector2 velocity)
 	{
 		float direction = Mathf.Sign(velocity.y);
-		float distance = Mathf.Abs(velocity.y) + _skinWidth;
-		Vector2 baseOrigin = direction == 1 ? _topLeft : _bottomLeft;
+		float distance = Mathf.Abs(velocity.y) + skinWidth;
 
-		for (int i = 0; i < _horizontalRayCount; i++)
+		Vector2 baseOrigin = direction == 1 ? topLeft : bottomLeft;
+
+		for (int i = 0; i < horizontalRayCount; i++)
 		{
-			Vector2 origin = baseOrigin + new Vector2(_horizontalRaySpacing * i, 0);
+			Vector2 origin = baseOrigin + new Vector2(horizontalRaySpacing * i, 0);
 
-			Debug.DrawLine(origin, origin + new Vector2(0, direction * distance));
+			//Debug.DrawLine(origin, origin + new Vector2(0, direction * distance));
 			RaycastHit2D hit = Physics2D.Raycast(
 				origin,
 				new Vector2(0, direction),
 				distance,
-				_layerObstacle
+				layerObstacle
 				);
 
 			if (hit)
 			{
-				velocity.y = (hit.distance - _skinWidth) * direction;
-				distance = hit.distance - _skinWidth;
-				if (direction < 0)
-					_collisions.bottom = true;
-				else
-					_collisions.top = true;
+				// Je ne suis PAS en train de passer à travers un layer onewayplatform vers le haut
+				//   donc c'est un obstacle
+				if (!(hit.transform.gameObject.tag == "oneWayPlatform" &&
+					 direction > 0))
+				{
+					velocity.y = (hit.distance - skinWidth) * direction;
+					distance = hit.distance - skinWidth;
+
+					if (direction < 0)
+						collisions.bottom = true;
+					else if (direction > 0)
+						collisions.top = true;
+				}
 			}
 		}
 	}
-	void CalculateSpacing()
-	{
-		Bounds bounds = _boxCollider.bounds; //à recalculer à chaque fois car on utilise le space.World
-		bounds.Expand(_skinWidth * -2f); //On rétressi de 1 pour chaque bord
 
-		_boxCollider = GetComponent<BoxCollider2D>();
-		_verticalRaySpacing = bounds.size.y / (_verticalRayCount - 1);
-		_horizontalRaySpacing = bounds.size.x / (_horizontalRayCount - 1);
+	void DetctFrontPit(Vector2 velocity) // Pas de ref car pas besoin de modifier la velocité
+	{
+		Vector2 origin = velocity.x > 0 ? bottomRight : bottomLeft;
+
+		Debug.DrawLine(origin, origin + Vector2.down * pitDistance);
+		RaycastHit2D hit = Physics2D.Raycast(
+			origin,
+			Vector2.down,
+			pitDistance,
+			layerObstacle
+			);
+
+		if (!hit)
+		{
+			collisions.frontPit = true;
+		}
 	}
+	void CalculateRaySpacings()
+	{
+		Bounds bounds = boxCollider.bounds;
+		bounds.Expand(skinWidth * -2f);
+
+		verticalRaySpacing = bounds.size.y / (verticalRayCount - 1);
+		horizontalRaySpacing = bounds.size.x / (horizontalRayCount - 1);
+	}
+
 	void CalculateBounds()
 	{
-		Bounds bounds = _boxCollider.bounds;
-		bounds.Expand(_skinWidth * -2f); //On rétressi de 1 pour chaque bord
+		Bounds bounds = boxCollider.bounds;
+		bounds.Expand(skinWidth * -2f);
 
-		_bottomLeft = new Vector2(bounds.min.x, bounds.min.y);
-		_bottomRight = new Vector2(bounds.max.x, bounds.min.y);
-		_topLeft = new Vector2(bounds.min.x, bounds.max.y);
-		_topRight = new Vector2(bounds.max.x, bounds.max.y);
+		bottomLeft = new Vector2(bounds.min.x, bounds.min.y);
+		bottomRight = new Vector2(bounds.max.x, bounds.min.y);
+		topLeft = new Vector2(bounds.min.x, bounds.max.y);
+		topRight = new Vector2(bounds.max.x, bounds.max.y);
 	}
 }

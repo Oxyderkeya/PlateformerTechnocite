@@ -5,98 +5,292 @@ using UnityEngine;
 [RequireComponent(typeof(MovementController))]
 public class Player : MonoBehaviour
 {
-	public float _acceleration;
+	delegate void MyDelegate();
+	MyDelegate UpdateAnimation;
+
+	[Header("Run speed")]
 	[Tooltip("Number of meter by second")]
-	public float _maxSpeed;
-	float _minSpeedThreshold = 0.02f; //seuil
+	public float maxSpeed;
+	public float timeToMaxSpeed;
 
+	[Header("Jump")]
+	public uint maxAirJump;
 	[Tooltip("Unity value of max jump height")]
-	public float _jumpHeight;
-	[Tooltip("Time in seconds ro reach the jump height")]
-	public float _timeToMaxJump;
-	[Tooltip("0: cannot move in air, 1: same as in the ground")]
-	public float _airControl;
-	float _maxFallingSpeed;
+	public float jumpHeight;
+	[Tooltip("Time in seconds to reach the jump height")]
+	public float timeToMaxJump;
+	[Tooltip("Can i change direction in air?")]
+	[Range(0, 1)]
+	public float airControl;
 
-	float _speed;
-	float _gravity;
-	float _jumpForce;
-	int _horizontal = 0;
+	[Header("Other")]
+	public bool animationByParameters;
+
+	int doubleJumpCount;
+
+	float acceleration;
+	float minSpeedThreshold;
+
+	float gravity;
+	float jumpForce;
+	float maxFallingSpeed;
+	int horizontal = 0;
+	bool doubleJumping;
+
+	Animator anim;
+	SpriteRenderer spriteRenderer;
 
 	Vector2 velocity = new Vector2();
 	MovementController movementController;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-		_minSpeedThreshold = _acceleration * Application.targetFrameRate * 2f;
-		Debug.Log(_minSpeedThreshold);
-		movementController = GetComponent<MovementController>();
+	bool freeze;
 
-		//Math calculation for gravity and jumpForce
-		_gravity = -(2 * _jumpHeight) / Mathf.Pow(_timeToMaxJump, 2);
-		_jumpForce = Mathf.Abs(_gravity) * _timeToMaxJump;
-		_maxFallingSpeed = -_jumpForce;
+	// Start is called before the first frame update
+	void Start()
+	{
+		// Math calculation acceleration
+		// s = distance
+		// a = acceleration
+		// t = time
+		// s = 1 / 2 at²
+		// a = 2s / t²
+		acceleration = (2f * maxSpeed) / Mathf.Pow(timeToMaxSpeed, 2);
+
+		minSpeedThreshold = acceleration / Application.targetFrameRate * 2f;
+		movementController = GetComponent<MovementController>();
+		anim = GetComponent<Animator>();
+		spriteRenderer = GetComponent<SpriteRenderer>();
+
+		// Math calculation for gravity and jumpForce
+		gravity = -(2 * jumpHeight) / Mathf.Pow(timeToMaxJump, 2);
+		jumpForce = Mathf.Abs(gravity) * timeToMaxJump;
+		maxFallingSpeed = -jumpForce;
+
+		if (animationByParameters)
+			UpdateAnimation = UpdateAnimationByParameters;
+		else
+			UpdateAnimation = UpdateAnimationByCode;
 	}
 
-    // Update is called once per frame
-    void Update()
-    {
-		if (movementController._collisions.bottom || movementController._collisions.top)
+	// Update is called once per frame
+	void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.H))
+		{
+			anim.SetTrigger("hit");
+		}
+
+		if (movementController.collisions.bottom || movementController.collisions.top)
 			velocity.y = 0;
 
-		_horizontal = 0;
+		horizontal = 0;
 
-		if (Input.GetKey(KeyCode.D))
+		if (Input.GetKey(KeyCode.D) && !freeze)
 		{
-			_horizontal += 1;
+			horizontal += 1;
 		}
-		if(Input.GetKey(KeyCode.Q))
+		if (Input.GetKey(KeyCode.Q) && !freeze)
 		{
-			_horizontal -= 1;
-		}
-
-		if (Input.GetKeyDown(KeyCode.Space) && movementController._collisions.bottom)
-		{
-			Jump();
+			horizontal -= 1;
 		}
 
 		float controlModifier = 1f;
-		if (!movementController._collisions.bottom)
-			controlModifier = _airControl;
-
-		velocity.x += _horizontal * _acceleration * controlModifier * Time.deltaTime;
-
-		//Pareil que en dessous en plus court
-		if(Mathf.Abs(velocity.x) > _maxSpeed)
+		if (!movementController.collisions.bottom)
 		{
-			velocity.x = _maxSpeed * _horizontal;
+			controlModifier = airControl;
 		}
-		//if (velocity.x > _maxSpeed)
-		//	velocity.x = _maxSpeed;
-		//if (velocity.x < -_maxSpeed)
-		//	velocity.x = -_maxSpeed;
 
-		if (_horizontal == 0)
+		velocity.x += horizontal * acceleration * controlModifier * Time.deltaTime;
+
+		if (Mathf.Abs(velocity.x) > maxSpeed)
+			velocity.x = maxSpeed * horizontal;
+
+
+		if (horizontal == 0)
 		{
-			if (velocity.x > _minSpeedThreshold)
-				velocity.x -= _acceleration * Time.deltaTime;
-			else if (velocity.x < -_minSpeedThreshold)
-				velocity.x += -_acceleration * Time.deltaTime;
+			if (velocity.x > minSpeedThreshold)
+				velocity.x -= acceleration * Time.deltaTime;
+			else if (velocity.x < -minSpeedThreshold)
+				velocity.x += acceleration * Time.deltaTime;
 			else
 				velocity.x = 0;
 		}
-			
 
-		velocity.y += _gravity * Time.deltaTime;
-		if(velocity.y < _maxFallingSpeed)
+		if ((movementController.collisions.left || movementController.collisions.right) && velocity.y < 0)
 		{
-			velocity.y = _maxFallingSpeed;
+			velocity.y += gravity * Time.deltaTime / 3f;
 		}
+		else
+		{
+			velocity.y += gravity * Time.deltaTime;
+		}
+
+		if (velocity.y < maxFallingSpeed)
+		{
+			velocity.y = maxFallingSpeed;
+		}
+
+		UpdateJump();
+		UpdateFlip();
+
 		movementController.Move(velocity * Time.deltaTime);
+
+		UpdateAnimation();
+
 	}
+
+	void UpdateAnimationByCode()
+	{
+		// Au sol
+		if (movementController.collisions.bottom)
+		{
+			if (velocity.x == 0)
+				anim.Play("FrogIdle");
+			else if (velocity.x != 0)
+				anim.Play("FrogRun");
+		}
+		// En l'air
+		else
+		{
+			if (!doubleJumping)
+			{
+				if (movementController.collisions.left ||
+					movementController.collisions.right)
+					anim.Play("FrogWallSticking");
+				else if (velocity.y > 0)
+					anim.Play("FrogJumping");
+				else if (velocity.y < 0)
+					anim.Play("FrogFalling");
+			}
+		}
+	}
+
+	void UpdateAnimationByParameters()
+	{
+		int vertical = (int)Mathf.Sign(velocity.y);
+		if (movementController.collisions.bottom)
+			vertical = 0;
+
+		anim.SetInteger("horizontal", horizontal);
+		anim.SetInteger("vertical", vertical);
+		anim.SetBool("grounded", movementController.collisions.bottom);
+		anim.SetBool("doubleJumping", doubleJumping);
+	}
+
+	void UpdateFlip()
+	{
+		if (velocity.x > 0)
+		{
+			// regarde vers la droite
+			spriteRenderer.flipX = false;
+		}
+		else if (velocity.x < 0)
+		{
+			// regarde vers la gauche
+			spriteRenderer.flipX = true;
+		}
+	}
+
+	void UpdateJump()
+	{
+		if (movementController.collisions.bottom)
+		{
+			doubleJumpCount = 0;
+			doubleJumping = false;
+		}
+
+		if (Input.GetKeyDown(KeyCode.Space) && !freeze)
+		{
+			// Normal jump
+			if (movementController.collisions.bottom)
+			{
+				Jump();
+			}
+			// Wall jump
+			else if (
+				!movementController.collisions.bottom &&
+				(movementController.collisions.left ||
+				 movementController.collisions.right))
+			{
+				WallJump();
+			}
+			// Normal or airJump
+			else if (doubleJumpCount < maxAirJump && !movementController.collisions.bottom)
+			{
+				DoubleJump();
+			}
+		}
+	}
+
 	void Jump()
 	{
-		velocity.y = _jumpForce;
+		velocity.y = jumpForce;
+	}
+
+	void WallJump()
+	{
+		int direction = movementController.collisions.left ? 1 : -1;
+		velocity.x = maxSpeed * direction;
+		Jump();
+	}
+
+	void DoubleJump()
+	{
+		StartCoroutine(DoubleJumpCoroutine());
+	}
+
+	IEnumerator DoubleJumpCoroutine()
+	{
+		Jump();
+		doubleJumpCount++;
+		doubleJumping = true;
+		anim.Play("FrogDoubleJumping");
+
+		while (!anim.GetCurrentAnimatorStateInfo(0).IsName("FrogDoubleJumping"))
+		{
+			yield return null;
+		}
+
+		while (true)
+		{
+			if (!anim.GetCurrentAnimatorStateInfo(0).IsName("FrogDoubleJumping") ||
+				movementController.collisions.bottom)
+				break;
+			yield return null;
+		}
+		doubleJumping = false;
+	}
+	private void OnTriggerEnter2D(Collider2D collision)
+	{
+		Enemy enemy = collision.gameObject.GetComponent<Enemy>();
+
+		if(enemy != null)
+		{
+			HitEnemy();
+		}
+	}
+	Coroutine hitEnemy;
+	void HitEnemy()
+	{
+		if(hitEnemy == null)
+		{
+			hitEnemy = StartCoroutine(HitEnemyCoroutine());
+		}
+	}
+	IEnumerator HitEnemyCoroutine()
+	{
+		anim.SetTrigger("hit");
+		freeze = true;
+		while(!anim.GetCurrentAnimatorStateInfo(0).IsName("FrogHit"))
+		{
+			yield return null;
+		}
+		while (anim.GetCurrentAnimatorStateInfo(0).IsName("FrogHit"))
+		{
+			yield return null;
+		}
+		SpawnPlayer spawnPlayer = FindObjectOfType<SpawnPlayer>();
+		spawnPlayer.Spawn();
+		Destroy(gameObject);
 	}
 }
